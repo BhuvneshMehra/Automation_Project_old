@@ -59,7 +59,39 @@ s3_bucket="upgrad-bhuvnesh"
 cd /var/log/apache2/
 tar -cvf /tmp/$filename *.log
 
+FILE=/var/www/html/inventory.html
+
+if [ -f "$FILE" ]
+then
+        echo "$FILE exists."
+else
+        echo -e "Log Type\tDate Created\tType\tSize" > $FILE
+
+fi
+
+
+#Bookeeping
+SIZE=$(ls -lh "/tmp/$filename" | awk '{print  $5}')
+
+echo -e "$(awk -F- '{print $2"-"$3}'  <<< $filename)\t$timestamp\t$(awk -F. '{print $2}'  <<< $filename)\t$SIZE" >> $FILE
+
+
+
+
 #Copying the file to the S3 bucket
 aws s3 \
 cp /tmp/${myname}-httpd-logs-${timestamp}.tar \
 s3://${s3_bucket}/${myname}-httpd-logs-${timestamp}.tar
+
+
+#Cron Job
+
+
+cronfile=/etc/cron.d/automation
+if [ -f "$cronfile" ]
+then
+        echo "$cronfile exists."
+else
+        echo -e "0 8 * * * root ./root/Automation_Project/automation.sh" > $cronfile
+
+fi
